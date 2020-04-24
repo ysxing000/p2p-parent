@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yang.dao.BidRequestMapper">
+
+    <insert id="saveBidRequest" keyProperty="id" useGeneratedKeys="true" parameterType="BidRequest">
+        insert into bidrequest(version,bidRequestType,bidRequestState
+            ,bidRequestAmount,currentRate,monthes2Return,bidCount,totalRewardAmount,currentSum,title,description,disableDate,createuser_id,disableDays,minBidAmount,
+                               applyTime,publishTime,returnType)
+        values(0,#{bidRequestType},#{bidRequestState},#{bidRequestAmount},#{currentRate}
+                  ,#{monthes2Return},#{bidCount},#{totalRewardAmount},#{currentSum},#{title},
+               #{description},#{disableDate},#{createUser.id},#{disableDays},#{minBidAmount},
+               #{applyDate},#{publishDate},#{returnType})
+    </insert>
+
+
+    <update id="updateBidRequest" parameterType="com.yang.entity.BidRequest">
+        update bidrequest
+        set version=version+1,
+            bidRequestType=#{bidRequestType},
+            bidRequestState=#{bidRequestState},
+            bidRequestAmount=#{bidRequestAmount},
+            currentRate=#{currentRate},
+            monthes2Return=#{monthes2Return},
+            bidCount=#{bidCount},
+            totalRewardAmount=#{totalRewardAmount},
+            currentSum=#{currentSum},
+            title=#{title},
+            description=#{description},
+            disableDate=#{disableDate},
+            createuser_id=#{createUser.id},
+            disableDays=#{disableDays},
+            minBidAmount=#{minBidAmount},
+            applyTime=#{applyDate},
+            publishTime=#{publishDate},
+            returnType=#{returnType}
+        where id=#{id} and version=#{version}
+
+    </update>
+
+    <!--public BidRequest selectRequestById(Long bidrequestid);-->
+    <!--根据id进行Request查询-->
+    <select id="selectRequestById" resultMap="BidRequestMap">
+        SELECT b.id,b.version,b.bidRequestType,b.bidRequestState
+                ,b.bidRequestAmount,b.currentRate,b.monthes2Return,b.bidCount,b.totalRewardAmount,b.currentSum,b.title,b.description,b.disableDate,b.createuser_id,b.disableDays,b.minBidAmount,
+               b.applyTime,b.publishTime,b.returnType,
+               g.id as g_id,
+               g.username as g_username
+        from bidrequest b LEFT JOIN logininfo g ON b.createuser_id=g.id where b.id=#{bidrequestid}
+    </select>
+
+    <!--public List<Bid> selectBidByRequestId(Long id); //借款标bidrequestiD 进行查询出投标记录-->
+    <select id="selectBidByRequestId" resultType="Bid">
+        select b.*,l.username from bid b LEFT JOIN logininfo l ON b.bidUser_id=l.id where b.bidrequest_id=#{id}
+    </select>
+
+<!--
+    添加一天流动信息
+    public int insertAccountFlow(Accountflow accountflow);-->
+
+    <insert id="insertAccountFlow" >
+      insert into accountflow(accountActionType,amount,note,balance,freezed,actionTime,account_id) values (1,#{money},#{note},#{balance},#{freezed},now(),#{account_id})
+    </insert>
+
+    <!--投标时进行借款标的投标时+1，-->
+    <update id="BidRequestbycon">
+        update bidRequest set bidCount=bidCount+1,currentSum=currentSum+#{money} where id=#{bidRequestId}
+    </update>
+
+    <!--//增加一天当前借款人的投标
+    public int insertBid(Bid bid);-->
+    <insert id="insertBid" >
+        insert into bid(actualRate,availableAmount,bidrequest_id,bidUser_id,bidTime,bidRequestTitle) values (#{actualRate},#{money},#{bidRequestId},#{bidUserId},now(),#{title})
+    </insert>
+
+    <!--//满标之后修改状态
+    public int updateRequestState(Long state);-->
+    <update id="updateRequestState">
+        update bidrequest set bidRequestState=#{state} where id=#{id}
+    </update>
+
+    <!--//满标之后查找借款标
+    public BidRequest findbyid(Long id);-->
+<select id="findbyid" resultMap="BidRequestMap">
+    SELECT b.id,b.version,b.bidRequestType,b.bidRequestState
+            ,b.bidRequestAmount,b.currentRate,b.monthes2Return,b.bidCount,b.totalRewardAmount,b.currentSum,b.title,b.description,b.disableDate,b.createuser_id,b.disableDays,b.minBidAmount,
+           b.applyTime,b.publishTime,b.returnType,
+           g.id as g_id,
+           g.username as g_username
+    from bidrequest b LEFT JOIN logininfo g ON b.createuser_id=g.id where b.id=#{id}
+</select>
+
+   <!-- //投标记录表
+    public Bid findBid(Long id);-->
+    <select id="findBid" resultType="Bid">
+        select b.*, g.id as g_id,
+               g.username as g_username from bid b left join  logininfo g on b.bidUser_id=g.id where b.bidrequest_id=#{id}
+    </select>
+  <!--  //放款时插入一条动账信息
+    public int insertaccountflow()-->
+    <insert id="insertaccountflow" keyProperty="id" useGeneratedKeys="true">
+       insert into accountflow(accountActionType,amount,note,balance,freezed,actionTime,account_id) values (#{accountActionType},#{amount},#{note},#{balance},#{freezed},now(),#{account_id})
+
+    </insert>
+
+   <!-- //查询bid
+    public Bid selectBidByid(Long id);-->
+    <select id="selectBidByid" resultType="Bid">
+        select * from bid where id=#{id}
+    </select>
+
+   <!-- public List<BidRequest> selectpage(@RequestParam("qo")BidRequestAuditQueryObject queryObject);-->
+
+    <select id="selectpage" resultMap="BidRequestMap">
+        SELECT b.id,b.version,b.bidRequestType,b.bidRequestState
+        ,b.bidRequestAmount,b.currentRate,b.monthes2Return,b.bidCount,b.totalRewardAmount,b.currentSum,b.title,b.description,b.disableDate,b.createuser_id,b.disableDays,b.minBidAmount,
+        b.applyTime,b.publishTime,b.returnType,
+               g.id as g_id,
+               g.username as g_username
+        from bidrequest b LEFT JOIN logininfo g ON b.createuser_id=g.id
+          <where>
+             <if test="qo.state!=-1">
+                 b.bidRequeststate in
+                 <foreach collection="qo.bidRequestStates" open="(" close=")" separator="," item="bidRequestState">
+                    #{bidRequestState}
+                 </foreach>
+             </if>
+
+             <if  test="qo.beginDate != null">
+                and b.applyTime>=#{qo.beginDate}
+             </if>
+             <if test="qo.endDate !=null">
+                 and b.applyTime &lt;= #{qo.endDate}
+             </if>
+
+             <if test="qo.orderBy != null">
+               order by b.${qo.orderBy}
+                 <if test="qo.orderType != null">
+                      ${qo.orderType}
+
+                 </if>
+             </if>
+          </where>
+    </select>
+    <resultMap id="BidRequestMap" type="BidRequest">
+        <id column="id" property="id" jdbcType="BIGINT" />
+        <result column="version" property="version" jdbcType="INTEGER" />
+        <result column="bidRequestType" property="bidRequestType" />
+        <result column="bidRequestState" property="bidRequestState" />
+        <result column="bidRequestAmount" property="bidRequestAmount" />
+        <result column="currentRate" property="currentRate" />
+        <result column="monthes2Return" property="monthes2Return" />
+        <result column="bidCount" property="bidCount" />
+        <result column="totalRewardAmount" property="totalRewardAmount" />
+        <result column="currentSum" property="currentSum" />
+        <result column="title" property="title" />
+        <result column="description" property="description" />
+
+        <result column="disableDate" property="disableDate" />
+        <result column="disableDays" property="disableDays" />
+        <result column="minBidAmount" property="minBidAmount" />
+        <result column="applyTime" property="applyDate" />
+        <result column="publishTime" property="publishDate" />
+        <result column="returnType" property="returnType" jdbcType="TINYINT" />
+     <association property="createUser" javaType="LoginInfo" columnPrefix="g_">
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+     </association>
+    </resultMap>
+
+
+</mapper>

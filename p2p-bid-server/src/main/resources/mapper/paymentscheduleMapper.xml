@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yang.dao.PaymentScheduleMapper">
+   <!-- public int insertpaymentschedule(PaymentSchedule paymentSchedule);-->
+    <insert id="insertpaymentschedule" useGeneratedKeys="true" keyProperty="id">
+        insert into paymentschedule (deadLine, payDate, totalAmount, principal, interest, monthIndex,state, bidRequestType, returnType, bidrequest_id, biduser_id, bidRequestTitle )values (#{deadLine}, #{payDate}, #{totalAmount},#{principal}, #{interest}, #{monthIndex},#{state}, #{bidRequestType}, #{returnType},#{bidRequestId}, #{borrowUser.id}, #{bidRequestTitle})
+    </insert>
+
+   <!-- public int intsertpaymentscheduledetail(PaymentScheduleDetail paymentscheduledetail);添加回款记录-->
+    <insert id="intsertpaymentscheduledetail" useGeneratedKeys="true" keyProperty="id">
+        insert into paymentscheduledetail (bidAmount, bid_id, totalAmount, principal, interest, monthIndex,deadline, bidRequest_id, payDate, returnType, paymentSchedule_id, fromLogininfo_id, toLogininfo_id)
+        values (#{bidAmount}, #{bidId}, #{totalAmount},#{principal}, #{interest}, #{monthIndex},#{deadline}, #{bidRequestId}, #{payDate},#{returnType}, #{paymentScheduleId}, #{fromLogininfo.id},#{toLogininfoId})
+
+    </insert>
+
+  <!--  //分页查询还款计划表
+    public List<PaymentSchedule> selectPaymentSchedulePageByUserid(Long id);
+-->
+    <select id="selectPaymentSchedulePageByUserid" resultType="PaymentSchedule">
+     select * from paymentschedule where bidUser_id=#{id}
+    </select>
+
+
+</mapper>

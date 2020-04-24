@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yang.mapper.UserInfoMapper">
+
+    <insert id="insertUserinfo" keyProperty="id" parameterType="UserInfo">
+      insert into userinfo(id,version,bitState,realName,idNumber,phoneNumber,incomeGrade_id,marriage_id,kidCount_id,educationBackground_id,houseCondition_id,email,authScore,realauthId)
+                  values (#{id},0,#{bitState},#{realName},#{idNumber},#{phoneNumber},#{incomeGrade.id,jdbcType=BIGINT},#{marriage.id,jdbcType=BIGINT},#{kidCount.id,jdbcType=BIGINT},#{educationBackground.id,jdbcType=BIGINT},#{houseCondition.id,jdbcType=BIGINT},#{email},#{authScore},#{realauthId})
+    </insert>
+
+
+    <select id="selectUserInfoById" resultMap="userInfoMap">
+
+        select id, version, bitState, realName, idNumber, phoneNumber,
+               incomeGrade_id, marriage_id, authScore,realauthId,email,
+               kidCount_id, educationBackground_id, houseCondition_id
+        from userinfo
+        where id = #{id,jdbcType=BIGINT}
+
+    </select>
+
+    <resultMap id="userInfoMap" type="UserInfo">
+        <id column="id" property="id" jdbcType="BIGINT" />
+        <result column="version" property="version" jdbcType="INTEGER" />
+        <result column="bitState" property="bitState" jdbcType="BIGINT" />
+        <result column="realName" property="realName" jdbcType="VARCHAR" />
+        <result column="idNumber" property="idNumber" jdbcType="VARCHAR" />
+        <result column="phoneNumber" property="phoneNumber" jdbcType="VARCHAR" />
+        <result column="authScore" property="authScore" />
+        <result column="email" property="email" />
+        <result column="realauthId" property="realauthId" />
+        <!-- 收入水平-->
+        <association property="incomeGrade" javaType="SystemDictionaryItem" column="incomeGrade_id" select="com.yang.mapper.SystemDictionaryItemMapper.selectById"/>
+        <!-- 婚姻状况-->
+        <association property="marriage" javaType="SystemDictionaryItem" column="marriage_id" select="com.yang.mapper.SystemDictionaryItemMapper.selectById"/>
+        <!-- 子女状况-->
+        <association property="kidCount" javaType="SystemDictionaryItem" column="kidCount_id" select="com.yang.mapper.SystemDictionaryItemMapper.selectById"/>
+        <!-- 教育背景-->
+        <association property="educationBackground" javaType="SystemDictionaryItem" column="educationBackground_id" select="com.yang.mapper.SystemDictionaryItemMapper.selectById"/>
+        <!-- 住房情况-->
+        <association property="houseCondition" javaType="SystemDictionaryItem" column="houseCondition_id" select="com.yang.mapper.SystemDictionaryItemMapper.selectById"/>
+
+
+    </resultMap>
+
+
+</mapper>
